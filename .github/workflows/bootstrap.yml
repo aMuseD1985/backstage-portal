@@ -27,6 +27,10 @@ jobs:
           corepack enable
           # Name der App wird abgefragt → per Pipe beantworten; --skip-install, weil wir gleich selbst installieren
           printf 'portal\n' | npx --yes @backstage/create-app@latest --path app --skip-install
+          # Fehler bei Yarn: @yarnpkg/core 4.9.2 ist mit einem lokalen Patch-Pfad für "got" veröffentlicht
+          # (ENOENT .yarn/patches/got-npm-11.8.2-….patch). Wie in der aktuellen Backstage-Vorlage auf 4.9.1 festlegen.
+          node -e "const fs=require('fs'),f='app/package.json',p=JSON.parse(fs.readFileSync(f,'utf8'));p.resolutions={...(p.resolutions||{}),'@yarnpkg/core':'4.9.1'};fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')"
+          grep -A4 '"resolutions"' app/package.json
           cd app
           yarn install
           echo "Backstage-Version: $(cat backstage.json 2>/dev/null || echo unbekannt)"
