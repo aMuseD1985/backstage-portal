@@ -1,0 +1,48 @@
+name: Backstage anlegen (einmalig)
+
+# Einmal von Hand starten: Actions → „Backstage anlegen (einmalig)“ → Run workflow.
+# Erzeugt die Backstage-App im Ordner app/ mit dem offiziellen create-app, checkt sie ein und baut danach direkt das erste Release.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  anlegen:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: App erzeugen
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d app ]; then echo "app/ gibt es schon – nichts zu tun."; exit 0; fi
+          corepack enable
+          # Name der App wird abgefragt → per Pipe beantworten; --skip-install, weil wir gleich selbst installieren
+          printf 'portal\n' | npx --yes @backstage/create-app@latest --path app --skip-install
+          cd app
+          yarn install
+          echo "Backstage-Version: $(cat backstage.json 2>/dev/null || echo unbekannt)"
+
+      - name: Einchecken
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet && [ -z "$(git status --porcelain app)" ]; then echo "nichts einzuchecken"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app
+          git commit -m "feat: Backstage-App angelegt (create-app)"
+          git push
+
+  bauen:
+    needs: anlegen
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: write

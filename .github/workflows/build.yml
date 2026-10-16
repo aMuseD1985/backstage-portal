@@ -1,0 +1,71 @@
+name: Backstage bauen
+
+# Baut die App und legt eine fertige Laufzeit als Release ab (backstage-runtime.tar.gz).
+# Gebaut wird auf Ubuntu 24.04 – derselben Version wie auf dem Server –, damit native Bausteine passen.
+# Der Server lädt nur noch herunter (server/deploy.sh); er baut nie selbst.
+on:
+  push:
+    branches: [main]
+    paths: ['app/**', '.github/workflows/build.yml']
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backstage-build
+  cancel-in-progress: true
+
+jobs:
+  bauen:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Bauen
+        shell: bash
+        working-directory: app
+        run: |
+          set -euo pipefail
+          corepack enable
+          yarn install --immutable
+          yarn tsc
+          yarn build:all
+          yarn build:backend
+
+      - name: Laufzeit zusammenstellen (ohne Entwicklerpakete)
+        shell: bash
+        run: |
+          set -euo pipefail
+          R="$RUNNER_TEMP/runtime"; mkdir -p "$R"
+          cp app/package.json app/yarn.lock "$R"/
+          [ -f app/.yarnrc.yml ] && cp app/.yarnrc.yml "$R"/
+          [ -d app/.yarn ] && cp -r app/.yarn "$R"/
+          tar xzf app/packages/backend/dist/skeleton.tar.gz -C "$R"
+          ( cd "$R" && corepack enable && yarn workspaces focus --all --production )
+          tar xzf app/packages/backend/dist/bundle.tar.gz -C "$R"
+          cp app/app-config.yaml app/app-config.production.yaml "$R"/
+          node --version > "$R"/NODE_VERSION
+          git rev-parse --short HEAD > "$R"/COMMIT
+          tar czf backstage-runtime.tar.gz -C "$R" .
+          ls -lh backstage-runtime.tar.gz
+
+      - name: Release anlegen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="build-$(date +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" backstage-runtime.tar.gz --title "$TAG" --notes "Gebaut aus $(git rev-parse --short HEAD), Node $(node --version)"
+          # nur die letzten 5 Releases behalten
+          gh release list --limit 100 --json tagName --jq '.[].tagName' | grep '^build-' | tail -n +6 | while read -r t; do
+            gh release delete "$t" --yes --cleanup-tag
+          done
