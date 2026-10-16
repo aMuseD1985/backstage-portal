@@ -1,7 +1,7 @@
 # Server-Einstellungen – ergänzen app-config.yaml und app-config.production.yaml aus dem Release.
 # Platzhalter __DOMAIN__ und __REPO__ setzt install.sh. Zugangsdaten kommen aus /opt/backstage/config/backstage.env.
 app:
-  title: Anderheyden Portal
+  title: Backstage Portal
   baseUrl: https://__DOMAIN__
 
 organization:

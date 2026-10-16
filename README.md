@@ -1,4 +1,4 @@
-# Anderheyden Portal (Backstage)
+# Backstage Portal
 
 Ein Backstage-Portal für alle eigenen Projekte – **ohne Docker**. Gebaut wird bei GitHub, und GitHub spielt jedes neue Release **per SSH** auf den Server (eigener Benutzer `backstage`, der nur diesen einen Befehl ausführen darf).
 
