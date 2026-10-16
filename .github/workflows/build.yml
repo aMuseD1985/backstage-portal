@@ -52,7 +52,8 @@ jobs:
           [ -f app/.yarnrc.yml ] && cp app/.yarnrc.yml "$R"/
           [ -d app/.yarn ] && cp -r app/.yarn "$R"/
           tar xzf app/packages/backend/dist/skeleton.tar.gz -C "$R"
-          ( cd "$R" && corepack enable && yarn workspaces focus --all --production )
+          # focus passt die yarn.lock nur intern an (ohne sie zu speichern) – dafür die CI-Sperre aufheben
+          ( cd "$R" && corepack enable && YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn workspaces focus --all --production )
           tar xzf app/packages/backend/dist/bundle.tar.gz -C "$R"
           cp app/app-config.yaml app/app-config.production.yaml "$R"/
           node --version > "$R"/NODE_VERSION

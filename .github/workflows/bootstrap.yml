@@ -32,7 +32,8 @@ jobs:
           node -e "const fs=require('fs'),f='app/package.json',p=JSON.parse(fs.readFileSync(f,'utf8'));p.resolutions={...(p.resolutions||{}),'@yarnpkg/core':'4.9.1'};fs.writeFileSync(f,JSON.stringify(p,null,2)+'\\n')"
           grep -A4 '"resolutions"' app/package.json
           cd app
-          yarn install
+          # Beim ersten Mal entsteht die yarn.lock – Yarn sperrt das in CI sonst automatisch (YN0028)
+          yarn install --no-immutable
           echo "Backstage-Version: $(cat backstage.json 2>/dev/null || echo unbekannt)"
 
       - name: Einchecken
