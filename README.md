@@ -8,18 +8,11 @@ Ein Backstage-Portal für alle eigenen Projekte – **ohne Docker**. Gebaut wird
 | App | `app/` | entsteht einmalig per Workflow „Backstage anlegen (einmalig)“ |
 | Bauen und Ausrollen | `.github/workflows/build.yml` | baut bei jeder Änderung an `app/` ein Release `backstage-runtime.tar.gz` und spielt es per SSH ein |
 | Server | `server/` | Einrichten, Aktualisieren, Entfernen – Node.js und MkDocs in eigenen Ordnern unter `/opt/backstage` |
+| Werkzeuge | `tools/` | `docker-check.sh`: prüft, ob und wie Container auf einem Server laufen würden (verändert nichts) |
 
 Auf dem Server liegt alles unter `/opt/backstage`, dazu ein systemd-Dienst, eine nginx-Seite und eine Datenbank `backstage` im vorhandenen PostgreSQL (ein Schema je Plugin). Backstage lauscht nur auf `127.0.0.1:7007`.
 
 ## Einrichten
-
-**0. Reste des Podman-Tests entfernen** (auf dem Server):
-
-```bash
-sudo systemctl disable --now podman.socket podman.service podman-auto-update.timer podman-restart.service 2>/dev/null
-sudo apt purge -y podman buildah slirp4netns uidmap fuse-overlayfs crun conmon netavark aardvark-dns catatonit passt containernetworking-plugins && sudo apt autoremove -y
-sudo userdel -r backstage      # der Test-Benutzer; install.sh legt ihn sauber neu an
-```
 
 **1. Repo bei GitHub:** privates Repo `aMuseD1985/backstage-portal` anlegen (leer), dann im VS-Code-Terminal:
 
@@ -31,20 +24,23 @@ git push -u origin main
 
 **2. Backstage anlegen:** auf GitHub → **Actions** → „Backstage anlegen (einmalig)“ → **Run workflow**. Das legt `app/` an und baut das erste Release (rund 15–25 Minuten). Ergebnis unter **Releases**.
 
-**3. Lese-Schlüssel für den Server:** Profilbild → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token:
+**3. Lese-Schlüssel für den Server** (eigener Schlüssel nur für den Server, getrennt von allen anderen): Profilbild → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token:
 - Repository access: **Only select repositories** → `backstage-portal` und die Projekt-Repos, deren Katalog/Doku Backstage lesen soll
 - Permissions: **Contents: Read-only** (Metadata: Read-only kommt automatisch)
 - Expiration: so lang, wie du magst – beim Ablauf in `/opt/backstage/config/backstage.env` ersetzen und `systemctl restart backstage`
 
 **4. DNS:** A-Eintrag `backstage.anderheyden.de` → IP des Servers.
 
-**5. Auf dem Server** (Ordner `server/` hinkopieren, z. B. `scp -r server root@v21886:/root/backstage-setup`):
+**5. Auf dem Server:**
 
 ```bash
-cd /root/backstage-setup
+git clone https://github.com/aMuseD1985/backstage-portal.git /root/backstage-portal
+cd /root/backstage-portal/server
 sudo DOMAIN=backstage.anderheyden.de bash install.sh
 sudo certbot --nginx -d backstage.anderheyden.de
 ```
+
+Ist das Repo privat, beim `git clone` den Lese-Schlüssel aus Schritt 3 als Passwort angeben (Benutzername beliebig) – oder den Ordner `server/` per `scp` auf den Server kopieren.
 
 `install.sh` fragt nach dem GitHub-Schlüssel und nach Benutzer/Passwort fürs Portal. Erneut ausführen schadet nicht.
 Am Ende zeigt es **einmalig** die Werte für den SSH-Deploy-Zugang – der private Schlüssel wird danach vom Server gelöscht.
@@ -82,4 +78,4 @@ Beim Einspielen (per SSH oder von Hand) geht es automatisch auf die vorige Versi
 - **Deploy-Zugang:** Der Schlüssel in `/opt/backstage/.ssh/authorized_keys` ist auf `restrict` und den erzwungenen Befehl `receive.sh` festgelegt – keine Shell, keine Tunnel. Der Benutzer `backstage` hat kein Passwort und darf per `sudo` ausschließlich `systemctl restart backstage`.
 - **Speicher:** Der Dienst ist auf 1,2 GB begrenzt (`MemoryMax`), damit die anderen Anwendungen auf dem Server nie leiden.
 - **Node-Version:** Build (`node-version: '22'`) und Server (`NODE_MAJOR=22`) müssen dieselbe Hauptversion haben; `deploy.sh` prüft das.
-- **Warum ohne Docker:** Der Server ist ein OpenVZ-Container; Podman ohne root scheitert an fehlendem `/dev/net/tun` und `fuse`, Docker würde iptables umbauen.
+- **Warum ohne Docker:** Der Server ist ein OpenVZ-Container. Container mit root würden laufen, bauen aber iptables um (freigegebene Ports umgehen die Firewall); ohne root sperrt OpenVZ `/dev/net/tun` für normale Benutzer, und `fuse` fehlt. Nachprüfen mit `sudo bash tools/docker-check.sh` – das Script verändert nichts.
