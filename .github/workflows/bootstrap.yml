@@ -46,3 +46,4 @@ jobs:
     uses: ./.github/workflows/build.yml
     permissions:
       contents: write
+    secrets: inherit   # damit das erste Release gleich per SSH ausgerollt werden kann (falls DEPLOY_SSH_* schon da sind)

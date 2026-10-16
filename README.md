@@ -1,12 +1,12 @@
 # Anderheyden Portal (Backstage)
 
-Ein Backstage-Portal für alle eigenen Projekte – **ohne Docker**. Gebaut wird bei GitHub, der Server lädt nur die fertige Laufzeit.
+Ein Backstage-Portal für alle eigenen Projekte – **ohne Docker**. Gebaut wird bei GitHub, und GitHub spielt jedes neue Release **per SSH** auf den Server (eigener Benutzer `backstage`, der nur diesen einen Befehl ausführen darf).
 
 | Teil | Wo | Was |
 |---|---|---|
 | Katalog | `catalog/` | alle Projekte, Server und Schnittstellen im Backstage-Format |
 | App | `app/` | entsteht einmalig per Workflow „Backstage anlegen (einmalig)“ |
-| Bauen | `.github/workflows/build.yml` | baut bei jeder Änderung an `app/` ein Release `backstage-runtime.tar.gz` |
+| Bauen und Ausrollen | `.github/workflows/build.yml` | baut bei jeder Änderung an `app/` ein Release `backstage-runtime.tar.gz` und spielt es per SSH ein |
 | Server | `server/` | Einrichten, Aktualisieren, Entfernen – Node.js und MkDocs in eigenen Ordnern unter `/opt/backstage` |
 
 Auf dem Server liegt alles unter `/opt/backstage`, dazu ein systemd-Dienst, eine nginx-Seite und eine Datenbank `backstage` im vorhandenen PostgreSQL (ein Schema je Plugin). Backstage lauscht nur auf `127.0.0.1:7007`.
@@ -47,8 +47,20 @@ sudo certbot --nginx -d backstage.anderheyden.de
 ```
 
 `install.sh` fragt nach dem GitHub-Schlüssel und nach Benutzer/Passwort fürs Portal. Erneut ausführen schadet nicht.
+Am Ende zeigt es **einmalig** die Werte für den SSH-Deploy-Zugang – der private Schlüssel wird danach vom Server gelöscht.
 
-**6. Öffnen:** `https://backstage.anderheyden.de` → Benutzer/Passwort → als Gast eintreten.
+**6. Deploy-Zugang bei GitHub eintragen:** Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**, viermal:
+
+| Name | Wert (aus der Ausgabe von `install.sh`) |
+|---|---|
+| `DEPLOY_SSH_HOST` | Servername, z. B. `v21886.1blu.de` |
+| `DEPLOY_SSH_PORT` | SSH-Port, meist `22` |
+| `DEPLOY_SSH_KNOWN_HOSTS` | die Zeile mit dem Host-Schlüssel des Servers (schützt vor untergeschobenen Servern) |
+| `DEPLOY_SSH_KEY` | der private Schlüssel, komplett mit `-----BEGIN …` und `-----END …` |
+
+Danach **Actions** → „Backstage bauen“ → **Run workflow** – ab jetzt spielt GitHub jedes neue Release selbst ein. Steht in der SSH-Konfiguration des Servers `AllowUsers`, weist `install.sh` darauf hin: dann `backstage` dort ergänzen.
+
+**7. Öffnen:** `https://backstage.anderheyden.de` → Benutzer/Passwort → als Gast eintreten.
 
 ## Im Alltag
 
@@ -56,15 +68,18 @@ sudo certbot --nginx -d backstage.anderheyden.de
 |---|---|
 | Katalog ändern | `catalog/*.yaml` bearbeiten, pushen – Backstage liest den Katalog von selbst neu (dauert wenige Minuten), kein Deploy nötig |
 | Projekt mit eigener `catalog-info.yaml` | in `catalog/all.yaml` als Ziel eintragen, Eintrag aus `systems.yaml` entfernen |
-| Backstage aktualisieren | in `app/`: `yarn backstage-cli versions:bump`, pushen → Release wird gebaut → auf dem Server `sudo bash /opt/backstage/deploy.sh` |
+| Backstage aktualisieren | in `app/`: `yarn backstage-cli versions:bump`, pushen → GitHub baut und spielt es per SSH ein |
+| Von Hand einspielen | auf dem Server `sudo bash /opt/backstage/deploy.sh` (holt das neueste Release) |
+| Deploy-Schlüssel erneuern | `sudo NEW_DEPLOY_KEY=1 bash install.sh`, dann `DEPLOY_SSH_KEY` bei GitHub ersetzen |
 | Protokoll | `journalctl -u backstage -f` |
 | Entfernen | `sudo bash /opt/backstage/uninstall.sh` |
 
-`deploy.sh` springt automatisch auf die vorige Version zurück, wenn eine neue nicht startet, und behält die letzten drei Versionen.
+Beim Einspielen (per SSH oder von Hand) geht es automatisch auf die vorige Version zurück, wenn eine neue nicht startet – der Lauf in Actions wird dann rot. Die letzten drei Versionen bleiben auf dem Server.
 
 ## Gut zu wissen
 
 - **Schutz:** nginx fragt einmal nach Benutzer/Passwort und setzt ein geheimes Cookie; die API-Pfade sind nur mit diesem Cookie erreichbar. In Backstage selbst meldet man sich als Gast an. Reines Basic-Auth genügt nicht, weil Backstage bei API-Aufrufen ein eigenes `Authorization`-Feld schickt.
+- **Deploy-Zugang:** Der Schlüssel in `/opt/backstage/.ssh/authorized_keys` ist auf `restrict` und den erzwungenen Befehl `receive.sh` festgelegt – keine Shell, keine Tunnel. Der Benutzer `backstage` hat kein Passwort und darf per `sudo` ausschließlich `systemctl restart backstage`.
 - **Speicher:** Der Dienst ist auf 1,2 GB begrenzt (`MemoryMax`), damit die anderen Anwendungen auf dem Server nie leiden.
 - **Node-Version:** Build (`node-version: '22'`) und Server (`NODE_MAJOR=22`) müssen dieselbe Hauptversion haben; `deploy.sh` prüft das.
 - **Warum ohne Docker:** Der Server ist ein OpenVZ-Container; Podman ohne root scheitert an fehlendem `/dev/net/tun` und `fuse`, Docker würde iptables umbauen.

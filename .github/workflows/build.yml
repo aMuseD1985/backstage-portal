@@ -2,7 +2,8 @@ name: Backstage bauen
 
 # Baut die App und legt eine fertige Laufzeit als Release ab (backstage-runtime.tar.gz).
 # Gebaut wird auf Ubuntu 24.04 – derselben Version wie auf dem Server –, damit native Bausteine passen.
-# Der Server lädt nur noch herunter (server/deploy.sh); er baut nie selbst.
+# Danach wird das Release per SSH auf den Server gespielt (Benutzer backstage, nur der Befehl „deploy“ erlaubt).
+# Der Server baut nie selbst. Ohne die Secrets DEPLOY_SSH_* wird das Ausrollen übersprungen.
 on:
   push:
     branches: [main]
@@ -64,8 +65,30 @@ jobs:
         run: |
           set -euo pipefail
           TAG="build-$(date +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
           gh release create "$TAG" backstage-runtime.tar.gz --title "$TAG" --notes "Gebaut aus $(git rev-parse --short HEAD), Node $(node --version)"
           # nur die letzten 5 Releases behalten
           gh release list --limit 100 --json tagName --jq '.[].tagName' | grep '^build-' | tail -n +6 | while read -r t; do
             gh release delete "$t" --yes --cleanup-tag
           done
+
+      - name: Auf den Server ausrollen (SSH)
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "::notice::Keine Secrets DEPLOY_SSH_* hinterlegt – Ausrollen übersprungen (Release $TAG liegt bereit)."
+            exit 0
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -p "${SSH_PORT:-22}" \
+              -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=20 \
+              "backstage@$SSH_HOST" "deploy $TAG" < backstage-runtime.tar.gz
+          rm -f ~/.ssh/deploy
