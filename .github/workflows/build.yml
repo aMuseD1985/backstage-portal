@@ -68,7 +68,8 @@ jobs:
         run: |
           set -euo pipefail
           exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
-          TAG="build-$(date +%Y%m%d)-${GITHUB_RUN_NUMBER}"
+          # Lauf-ID statt Laufnummer: die Nummer zählt je Workflow getrennt („anlegen“ und „bauen“ kollidieren), die ID ist eindeutig
+          TAG="build-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           gh release create "$TAG" backstage-runtime.tar.gz --title "$TAG" --notes "Gebaut aus $(git rev-parse --short HEAD), Node $(node --version)"
           # nur die letzten 5 Releases behalten
