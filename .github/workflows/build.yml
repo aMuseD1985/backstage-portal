@@ -102,5 +102,15 @@ jobs:
         shell: bash
         run: |
           [ -f "$RUNNER_TEMP/log.txt" ] || exit 0
-          msg="$(tail -n 80 "$RUNNER_TEMP/log.txt" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
-          echo "::error title=Letzte Ausgabe::${msg}"
+          # Annotationen werden gekürzt – darum: erst die Fehlerzeilen, dann das Ende, in Stücken zu höchstens 3000 Zeichen
+          L="$RUNNER_TEMP/log.txt"; C="$RUNNER_TEMP/kurz.txt"
+          { echo "== Fehlerzeilen"; sed 's/\x1b\[[0-9;]*m//g' "$L" | grep -E 'YN000[1-9]|YN00[1-9][0-9].*(rror|fail)|[Ee]rror|ERR!|failed|Exit code' | grep -v 'YN0060' | tail -n 25
+            echo "== Ende"; sed 's/\x1b\[[0-9;]*m//g' "$L" | tail -n 15; } | cut -c1-300 > "$C"
+          n=1; buf=""
+          while IFS= read -r line; do
+            if [ $(( ${#buf} + ${#line} )) -gt 3000 ] && [ $n -lt 5 ]; then
+              echo "::error title=Letzte Ausgabe ${n}::$(printf '%s' "$buf" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed ':a;N;$!ba;s/\n/%0A/g')"; n=$((n+1)); buf=""
+            fi
+            buf="${buf}${line}"$'\n'
+          done < "$C"
+          [ -n "$buf" ] && echo "::error title=Letzte Ausgabe ${n}::$(printf '%s' "$buf" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
