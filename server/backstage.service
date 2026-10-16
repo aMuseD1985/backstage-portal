@@ -1,0 +1,27 @@
+[Unit]
+Description=Backstage-Portal (ohne Docker)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=backstage
+Group=backstage
+WorkingDirectory=/opt/backstage/current
+EnvironmentFile=/opt/backstage/config/backstage.env
+Environment=NODE_ENV=production
+Environment=HOME=/opt/backstage
+Environment=PATH=/opt/backstage/node/bin:/opt/backstage/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_OPTIONS=--max-old-space-size=768
+ExecStart=/opt/backstage/node/bin/node packages/backend --config app-config.yaml --config app-config.production.yaml --config /opt/backstage/config/app-config.server.yaml
+Restart=on-failure
+RestartSec=10
+# Speicher begrenzen, damit ablesio, ElTouro und fressnapf Charge nie leiden
+MemoryMax=1200M
+# Absicherung
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

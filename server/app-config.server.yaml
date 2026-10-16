@@ -1,0 +1,53 @@
+# Server-Einstellungen – ergänzen app-config.yaml und app-config.production.yaml aus dem Release.
+# Platzhalter __DOMAIN__ und __REPO__ setzt install.sh. Zugangsdaten kommen aus /opt/backstage/config/backstage.env.
+app:
+  title: Anderheyden Portal
+  baseUrl: https://__DOMAIN__
+
+organization:
+  name: Anderheyden
+
+backend:
+  baseUrl: https://__DOMAIN__
+  listen:
+    host: 127.0.0.1          # nur lokal – nach außen geht es ausschließlich über nginx
+    port: 7007
+  cors:
+    origin: https://__DOMAIN__
+  database:
+    client: pg
+    pluginDivisionMode: schema   # EINE Datenbank, ein Schema je Plugin (statt einer Datenbank je Plugin)
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: backstage
+
+auth:
+  environment: production
+  providers:
+    # Anmeldung als Gast: Der Zugang wird davor von nginx geschützt (Passwort + Cookie).
+    guest:
+      dangerouslyAllowOutsideDevelopment: true
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}   # nur Lesen: Katalog-Dateien, API-Beschreibungen und Doku aus den Repos
+
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location, User, Group, Domain, Template]
+  locations:
+    - type: url
+      target: https://github.com/__REPO__/blob/main/catalog/all.yaml
+
+techdocs:
+  builder: local
+  generator:
+    runIn: local               # MkDocs aus /opt/backstage/venv, kein Docker
+  publisher:
+    type: local
+    local:
+      publishDirectory: /opt/backstage/data/techdocs
