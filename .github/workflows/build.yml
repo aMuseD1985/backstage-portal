@@ -22,11 +22,11 @@ jobs:
   bauen:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
@@ -35,6 +35,7 @@ jobs:
         working-directory: app
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           corepack enable
           yarn install --immutable
           yarn tsc
@@ -45,6 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           R="$RUNNER_TEMP/runtime"; mkdir -p "$R"
           cp app/package.json app/yarn.lock "$R"/
           [ -f app/.yarnrc.yml ] && cp app/.yarnrc.yml "$R"/
@@ -64,6 +66,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           TAG="build-$(date +%Y%m%d)-${GITHUB_RUN_NUMBER}"
           echo "TAG=$TAG" >> "$GITHUB_ENV"
           gh release create "$TAG" backstage-runtime.tar.gz --title "$TAG" --notes "Gebaut aus $(git rev-parse --short HEAD), Node $(node --version)"
@@ -81,6 +84,7 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
             echo "::notice::Keine Secrets DEPLOY_SSH_* hinterlegt – Ausrollen übersprungen (Release $TAG liegt bereit)."
             exit 0
@@ -92,3 +96,11 @@ jobs:
               -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=20 \
               "backstage@$SSH_HOST" "deploy $TAG" < backstage-runtime.tar.gz
           rm -f ~/.ssh/deploy
+
+      - name: Fehlerausgabe als Annotation (lesbar über die API)
+        if: failure()
+        shell: bash
+        run: |
+          [ -f "$RUNNER_TEMP/log.txt" ] || exit 0
+          msg="$(tail -n 80 "$RUNNER_TEMP/log.txt" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
+          echo "::error title=Letzte Ausgabe::${msg}"

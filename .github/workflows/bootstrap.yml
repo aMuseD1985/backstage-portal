@@ -12,9 +12,9 @@ jobs:
   anlegen:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
@@ -22,6 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           if [ -d app ]; then echo "app/ gibt es schon – nichts zu tun."; exit 0; fi
           corepack enable
           # Name der App wird abgefragt → per Pipe beantworten; --skip-install, weil wir gleich selbst installieren
@@ -34,12 +35,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          exec > >(tee -a "$RUNNER_TEMP/log.txt") 2>&1
           if git diff --quiet && [ -z "$(git status --porcelain app)" ]; then echo "nichts einzuchecken"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app
           git commit -m "feat: Backstage-App angelegt (create-app)"
           git push
+
+      - name: Fehlerausgabe als Annotation (lesbar über die API)
+        if: failure()
+        shell: bash
+        run: |
+          [ -f "$RUNNER_TEMP/log.txt" ] || exit 0
+          msg="$(tail -n 80 "$RUNNER_TEMP/log.txt" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
+          echo "::error title=Letzte Ausgabe::${msg}"
 
   bauen:
     needs: anlegen
