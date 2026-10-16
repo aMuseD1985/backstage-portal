@@ -1,0 +1,15 @@
+# Einstiegspunkt des Katalogs – Backstage liest diese Datei und folgt den Zielen.
+# Sobald ein Projekt-Repo eine eigene catalog-info.yaml hat: hier eintragen und den Eintrag in systems.yaml entfernen
+# (sonst gibt es denselben Namen doppelt).
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: anderheyden-katalog
+  description: Alle Projekte, Server und Schnittstellen
+spec:
+  targets:
+    - ./org.yaml
+    - ./infra.yaml
+    - ./systems.yaml
+    # - https://github.com/aMuseD1985/ablesio.de/blob/main/catalog-info.yaml
+    # - https://github.com/aMuseD1985/ElTouro/blob/main/catalog-info.yaml

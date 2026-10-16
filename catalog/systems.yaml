@@ -1,0 +1,205 @@
+# Erste Übersicht aller Projekte. Details wandern später in die catalog-info.yaml des jeweiligen Repos.
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: ablesio
+  title: ablesio.de
+  description: Zählerstände erfassen und auswerten, Messstecker (Shelly), Energieräuber-Jagd, Stecker-Service mit Pi-Flasher
+  links: [{ url: "https://ablesio.de", title: Live }]
+spec:
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ablesio-web
+  title: ablesio – App, API und Admin
+  annotations:
+    github.com/project-slug: aMuseD1985/ablesio.de
+  links: [{ url: "https://ablesio.de", title: Live }]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+  system: ablesio
+  dependsOn: [resource:vps-v21886, resource:postgres-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ablesio-shelly
+  title: ablesio – Freigabeliste Shelly-Script
+  annotations:
+    github.com/project-slug: aMuseD1985/ablesio-shelly
+spec:
+  type: library
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: ablesio
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: eltouro
+  title: ElTouro
+  description: E-Scooter-Community-App mit PHP-Backend und Android-App
+spec:
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: eltouro-backend
+  title: ElTouro – Backend
+  annotations:
+    github.com/project-slug: aMuseD1985/ElTouro
+spec:
+  type: service
+  lifecycle: production
+  owner: group:anderheyden
+  system: eltouro
+  dependsOn: [resource:vps-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: eltouro-android
+  title: ElTouro – Android-App
+  annotations:
+    github.com/project-slug: aMuseD1985/ElTouro-Android
+spec:
+  type: mobile-app
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: eltouro
+  dependsOn: [component:eltouro-backend]
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: fressnapf-charge
+  title: fressnapf Charge
+  description: Konzept und Prototyp zur Koordination der Ladeplätze am Standort Krefeld (Gelände West/Ost)
+spec:
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: fressnapf-charge-app
+  title: fressnapf Charge – Prototyp
+spec:
+  type: website
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: fressnapf-charge
+  dependsOn: [resource:vps-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: echarge-manager
+  title: eCharge-Manager
+  description: Wallbox- und Ladeverwaltung mit Abrechnung für Mitlader
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: anfrageblitz
+  title: anfrageblitz.de
+  description: Terminanfrage-Seiten für kleine Dienstleistungsbetriebe – gemeinsamer Core plus Mandanten-Pakete
+  links: [{ url: "https://anfrageblitz.de", title: Live }]
+spec:
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: anfrageblitz-core
+  title: anfrageblitz – Core
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+  system: anfrageblitz
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: buchungsapp
+  title: Buchungsapp (Dok Or)
+  description: Termin- und Buchungsapp, wird zum generischen Template für Dienstleistungsbetriebe
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+  system: anfrageblitz
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: secrets-pusher
+  title: Anderheyden Secret Pusher
+  description: Passwörter und Dateien sicher teilen
+  links: [{ url: "https://secrets-pusher.anderheyden.de", title: Live }]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: crypto-gridbot
+  title: Papier-Grid-Bot
+  links: [{ url: "https://games.anderheyden.de", title: games.anderheyden.de }]
+spec:
+  type: website
+  lifecycle: experimental
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: passierschein-a38
+  title: Passierschein A38
+  links: [{ url: "https://games.anderheyden.de/passierschein-a38/", title: Spielen }]
+spec:
+  type: website
+  lifecycle: production
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: neopilot
+  title: NeoPilot
+  description: DJI Neo 2 KI-gesteuert durch Gebäude fliegen
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: dronecut
+  title: Drohnen-Schnitt-Pipeline (dronecut)
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: smarthome
+  title: Smart Home (ioBroker, RaspberryMatic)
+spec:
+  type: service
+  lifecycle: production
+  owner: group:anderheyden

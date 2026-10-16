@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: anderheyden
+  title: Anderheyden
+spec:
+  type: team
+  children: []
+  members: [amused1985]
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: amused1985
+  title: Marco Anderheyden
+spec:
+  profile:
+    displayName: Marco Anderheyden
+  memberOf: [anderheyden]

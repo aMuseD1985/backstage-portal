@@ -1,0 +1,22 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vps-v21886
+  title: vServer v21886 (1blu)
+  description: Gemeinsamer Server für ablesio, ElTouro, fressnapf Charge und dieses Portal (OpenVZ, Ubuntu 24.04, nginx, PostgreSQL)
+  links:
+    - url: https://github.com/aMuseD1985/VPS-Infra
+      title: Server-Regeln (VPS-Infra)
+spec:
+  type: server
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgres-v21886
+  title: PostgreSQL auf v21886
+spec:
+  type: database
+  owner: group:anderheyden
+  dependsOn: [resource:vps-v21886]
