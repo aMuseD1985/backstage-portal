@@ -9,9 +9,9 @@ organization:
 
 backend:
   baseUrl: https://__DOMAIN__
-  listen:
-    host: 127.0.0.1          # nur lokal – nach außen geht es ausschließlich über nginx
-    port: 7007
+  # nur lokal – nach außen geht es ausschließlich über nginx. Als Text, weil app-config.production.yaml
+  # listen ebenfalls als Text (':7007') setzt – ein Objekt { host, port } lehnt Backstage dann ab.
+  listen: 127.0.0.1:7007
   cors:
     origin: https://__DOMAIN__
   database:
