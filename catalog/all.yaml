@@ -11,5 +11,6 @@ spec:
     - ./org.yaml
     - ./infra.yaml
     - ./systems.yaml
+    - https://github.com/aMuseD1985/VintageCam-Droid/blob/main/catalog-info.yaml   # braucht Lese-Zugriff des Tokens auf dieses Repo
     # - https://github.com/aMuseD1985/ablesio.de/blob/main/catalog-info.yaml
     # - https://github.com/aMuseD1985/ElTouro/blob/main/catalog-info.yaml

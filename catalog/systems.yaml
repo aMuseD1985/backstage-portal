@@ -23,6 +23,7 @@ spec:
   owner: group:anderheyden
   system: ablesio
   dependsOn: [resource:vps-v21886, resource:postgres-v21886]
+  providesApis: [ablesio-smarthome-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -203,3 +204,89 @@ spec:
   type: service
   lifecycle: production
   owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ablesio-smarthome-api
+  title: ablesio Smart-Home-API
+  description: Öffentliche REST-API für Smart-Home-Integrationen (Zählerstände übermitteln und auslesen, Verträge, Berichte, Prognose). Zugriff mit Token aus dem Profil, braucht ablesio Ultimate.
+  tags: [rest, smart-home]
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:anderheyden
+  system: ablesio
+  definition:
+    $text: https://github.com/aMuseD1985/ablesio.de/blob/main/openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: mach
+  title: MACH
+  description: Multichannel Automated Content Hub – Inhalte planen, erzeugen, freigeben und auf mehreren Kanälen veröffentlichen
+  tags: [content, automation, n8n]
+spec:
+  owner: group:anderheyden
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mach-app
+  title: MACH – App (PWA)
+  annotations:
+    github.com/project-slug: aMuseD1985/MACH
+  links: [{ url: "https://mach.anderheyden.de", title: Live }]
+spec:
+  type: website
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: mach
+  dependsOn: [component:mach-backend]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mach-backend
+  title: MACH – Backend (n8n, PostgreSQL mit Row-Level-Security)
+  description: n8n-Workflows und die API-Funktion mach.api(); keine eigene OpenAPI-Datei, die Aktionen stehen im Register mach.api_actions.
+  annotations:
+    github.com/project-slug: aMuseD1985/MACH
+  links: [{ url: "https://mach-backend.anderheyden.de", title: Backend }]
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: mach
+  dependsOn: [resource:vps-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mach-media-worker
+  title: MACH – Media-Worker
+  description: FFmpeg-Rendering, Motion-Vorlagen und PDF-Karussell.
+  annotations:
+    github.com/project-slug: aMuseD1985/MACH
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: mach
+  dependsOn: [resource:vps-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mach-mcp
+  title: MACH – MCP-Server
+  description: Claude-Connector (OAuth 2.1 mit PKCE), rund 55 Werkzeuge; spricht nur mit dem n8n-Gateway.
+  annotations:
+    github.com/project-slug: aMuseD1985/MACH
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:anderheyden
+  system: mach
+  dependsOn: [component:mach-backend, resource:vps-v21886]
