@@ -108,6 +108,7 @@ spec:
   type: website
   lifecycle: production
   owner: group:anderheyden
+  providesApis: [echarge-manager-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
@@ -231,6 +232,7 @@ spec:
   owner: group:anderheyden
   system: mach
   dependsOn: [component:mach-backend]
+  consumesApis: [mach-gateway-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -246,7 +248,9 @@ spec:
   lifecycle: experimental
   owner: group:anderheyden
   system: mach
-  dependsOn: [resource:vps-v21886]
+  dependsOn: [resource:vps-v3575]
+  providesApis: [mach-gateway-api]
+  consumesApis: [mach-media-worker-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -261,7 +265,8 @@ spec:
   lifecycle: experimental
   owner: group:anderheyden
   system: mach
-  dependsOn: [resource:vps-v21886]
+  dependsOn: [resource:vps-v3575]
+  providesApis: [mach-media-worker-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -276,4 +281,6 @@ spec:
   lifecycle: experimental
   owner: group:anderheyden
   system: mach
-  dependsOn: [component:mach-backend, resource:vps-v21886]
+  dependsOn: [component:mach-backend, resource:vps-v3575]
+  providesApis: [mach-mcp-api]
+  consumesApis: [mach-gateway-api]

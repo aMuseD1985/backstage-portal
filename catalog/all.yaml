@@ -15,3 +15,12 @@ spec:
     - https://github.com/aMuseD1985/ElTouro/blob/main/catalog-info.yaml        # API eltouro-api (System und Komponenten noch in systems.yaml)
     - https://github.com/aMuseD1985/VPS-Infra/blob/main/catalog-info.yaml      # Leitstand und vps-leitstand-api
     - https://github.com/aMuseD1985/ablesio.de/blob/main/catalog-info.yaml      # API ablesio-smarthome-api (System und Komponenten noch in systems.yaml)
+    - https://github.com/aMuseD1985/MACH/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/PULSEFORGE/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/stadt-express/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/family-manager/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/foerderverein/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/zuhause/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/eCharge-Manager/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/marcos-ai-blog/blob/main/catalog-info.yaml
+    - https://github.com/aMuseD1985/anderheyden-media/blob/main/catalog-info.yaml
