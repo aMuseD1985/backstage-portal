@@ -119,7 +119,7 @@ SUDO=/etc/sudoers.d/backstage
 printf 'backstage ALL=(root) NOPASSWD: /usr/bin/systemctl restart backstage\n' > "$SUDO.tmp"
 visudo -cf "$SUDO.tmp" >/dev/null && install -m 440 "$SUDO.tmp" "$SUDO"; rm -f "$SUDO.tmp"
 AK="$BASE/.ssh/authorized_keys"
-SSHPORT="$(sshd -T 2>/dev/null | awk '$1=="port"{print $2; exit}')"; SSHPORT="${SSHPORT:-22}"
+SSHPORT="$(sshd -T 2>/dev/null | awk '$1=="port" && !p {print $2; p=1}')"; SSHPORT="${SSHPORT:-22}"
 SSHHOST="${SSH_HOST:-$(hostname -f)}"
 if [ -s "$AK" ] && [ "${NEW_DEPLOY_KEY:-0}" != "1" ]; then
   echo "Deploy-Schlüssel ist schon eingerichtet (neu erzeugen: NEW_DEPLOY_KEY=1 bash install.sh)."
