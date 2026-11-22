@@ -208,21 +208,6 @@ spec:
   owner: group:anderheyden
 ---
 apiVersion: backstage.io/v1alpha1
-kind: API
-metadata:
-  name: ablesio-smarthome-api
-  title: ablesio Smart-Home-API
-  description: Öffentliche REST-API für Smart-Home-Integrationen (Zählerstände übermitteln und auslesen, Verträge, Berichte, Prognose). Zugriff mit Token aus dem Profil, braucht ablesio Ultimate.
-  tags: [rest, smart-home]
-spec:
-  type: openapi
-  lifecycle: production
-  owner: group:anderheyden
-  system: ablesio
-  definition:
-    $text: https://github.com/aMuseD1985/ablesio.de/blob/main/openapi.yaml
----
-apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: mach
