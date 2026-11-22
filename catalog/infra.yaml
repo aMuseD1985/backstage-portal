@@ -20,3 +20,16 @@ spec:
   type: database
   owner: group:anderheyden
   dependsOn: [resource:vps-v21886]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: vps-v3575
+  title: vServer v3575 (1blu)
+  description: Zweiter Server seit 22.11.2026 – MACH, APK-Builder und dieses Portal (Ubuntu 24.04, nginx, PostgreSQL)
+  links:
+    - url: https://github.com/aMuseD1985/VPS-Infra
+      title: Server-Regeln (VPS-Infra)
+spec:
+  type: server
+  owner: group:anderheyden

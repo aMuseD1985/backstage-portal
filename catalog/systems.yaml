@@ -60,6 +60,7 @@ spec:
   owner: group:anderheyden
   system: eltouro
   dependsOn: [resource:vps-v21886]
+  providesApis: [eltouro-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -74,6 +75,7 @@ spec:
   owner: group:anderheyden
   system: eltouro
   dependsOn: [component:eltouro-backend]
+  consumesApis: [eltouro-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
